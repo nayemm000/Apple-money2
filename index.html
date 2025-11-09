@@ -1,678 +1,762 @@
-<!doctype html>
-<html lang="hi">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>Special Independence Day message waiting for you</title>
-<style>
-/* ============================
-   INDEPENDENCE DAY - Single File
-   All CSS inline. No external libs.
-   Uses rakhi.gif and rakhi.mp3 (local) as provided.
-   ============================ */
-
-/* Reset & base */
-:root{
-  --bg1:#0b0120;
-  --bg2:#140a2e;
-  --accent-magenta: #ff2d95;
-  --accent-cyan: #00f0ff;
-  --accent-gold: #ffd166;
-  --glass: rgba(255,255,255,0.04);
-  --neon: 0 0 20px rgba(255,0,150,0.18);
-  --neon-strong: 0 0 30px rgba(0,255,255,0.12);
-  --font-stack: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:linear-gradient(120deg,var(--bg1),var(--bg2));font-family:var(--font-stack);overflow:hidden;}
-a{color:inherit;text-decoration:none}
-
-/* Full viewport container, no scroll */
-.app{
-  height:100vh;width:100vw;position:relative;display:flex;align-items:center;justify-content:center;
-  overflow:hidden;
-}
-
-/* Animated shifting neon gradient background */
-.bg-animated{
-  position:absolute;inset:0;z-index:0;
-  background: radial-gradient(600px circle at 10% 10%, rgba(255,45,149,0.06), transparent 8%),
-              radial-gradient(600px circle at 90% 80%, rgba(0,240,255,0.04), transparent 10%),
-              linear-gradient(135deg, rgba(11,1,32,1) 0%, rgba(20,10,46,1) 100%);
-  animation: bgShift 12s linear infinite;
-  filter:blur(30px) saturate(1.2);
-}
-@keyframes bgShift{
-  0%{transform:scale(1) rotate(0deg)}
-  50%{transform:scale(1.05) rotate(1deg)}
-  100%{transform:scale(1) rotate(0deg)}
-}
-
-/* Landing screen */
-.landing{
-  position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  backdrop-filter: blur(2px);
-  transition:opacity .9s ease, transform .9s ease;
-}
-.landing.hidden{opacity:0;pointer-events:none;transform:scale(.98)}
-
-/* Landing central card */
-.l-card{
-  width:clamp(300px,68vw,920px);max-width:92%;padding:28px;border-radius:18px;text-align:center;
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6), var(--neon);
-  transform-origin:center;
-  animation: landingPulse 6s ease-in-out infinite;
-}
-@keyframes landingPulse{
-  0%{transform:scale(1)}
-  50%{transform:scale(1.03)}
-  100%{transform:scale(1)}
-}
-.l-title{
-  color:white;font-weight:700;font-size:clamp(18px,4.1vw,34px);letter-spacing:0.6px;
-  text-shadow: 0 0 18px rgba(255,255,255,0.04);
-  margin-bottom:18px;
-}
-.l-sub{color:rgba(255,255,255,0.75);font-size:clamp(13px,2vw,16px);margin-bottom:22px}
-.reveal-btn{
-  display:inline-block;padding:14px 28px;border-radius:999px;font-weight:700;cursor:pointer;
-  background:linear-gradient(90deg,var(--accent-magenta),var(--accent-cyan));
-  box-shadow: 0 0 28px rgba(255,45,149,0.12), 0 8px 30px rgba(0,0,0,0.6);
-  color:white;border:2px solid rgba(255,255,255,0.06);
-  transition:transform .25s ease, box-shadow .25s ease;
-  text-transform:uppercase;letter-spacing:1px;
-}
-.reveal-btn:hover{transform:translateY(-4px);box-shadow: 0 0 36px rgba(0,255,255,0.12)}
-.reveal-small{font-size:12px;display:block;margin-top:10px;color:rgba(255,255,255,0.7)}
-
-/* Main celebration stage (visible after reveal) */
-.stage{
-  position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-  padding:18px;gap:16px;
-  opacity:0;pointer-events:none;transition:opacity .9s ease .2s;
-}
-.stage.visible{opacity:1;pointer-events:auto}
-
-/* Top center rakhi (we'll use provided rakhi.gif as hero visual) */
-.hero-img{
-  width:clamp(180px,48vw,640px);max-width:94%;
-  border-radius:14px;display:block;object-fit:cover;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(255,45,149,0.06);
-  transform-origin:center;
-  animation: heroPulse 5.5s ease-in-out infinite;
-  border: 1px solid rgba(255,255,255,0.04);
-}
-@keyframes heroPulse{
-  0%{transform:scale(1) translateY(0)}
-  50%{transform:scale(1.03) translateY(-6px)}
-  100%{transform:scale(1) translateY(0)}
-}
-
-/* "Happy Independence Day" header with disco/backlight */
-.header-wrap{
-  margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:8px;
-}
-.happy-title{
-  font-size:clamp(18px,5vw,52px);font-weight:800;color:white;text-align:center;
-  letter-spacing:0.6px;padding:10px 20px;border-radius:14px;
-  position:relative;
-  z-index:3;
-  /* dual-color animated glow behind text */
-  background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
-}
-.happy-illum {
-  position:absolute;inset:0;z-index:2;border-radius:14px;pointer-events:none;
-  filter:blur(18px);mix-blend-mode:screen;opacity:0.9;
-  animation: illum 6s linear infinite;
-}
-@keyframes illum{
-  0%{background: radial-gradient(40% 60% at 10% 10%, rgba(255,45,149,0.18), transparent 10%), radial-gradient(30% 40% at 90% 90%, rgba(0,240,255,0.12), transparent 12%)}
-  50%{background: radial-gradient(40% 60% at 90% 10%, rgba(255,197,0,0.15), transparent 10%), radial-gradient(30% 40% at 10% 90%, rgba(0,240,255,0.12), transparent 12%)}
-  100%{background: radial-gradient(40% 60% at 10% 10%, rgba(255,45,149,0.18), transparent 10%), radial-gradient(30% 40% at 90% 90%, rgba(0,240,255,0.12), transparent 12%)}
-}
-/* disco rotating ring */
-.disco-ring{
-  position:absolute;inset:-6px;border-radius:16px;z-index:1;pointer-events:none;
-  background: conic-gradient(from 0deg, rgba(255,45,149,0.25), rgba(0,240,255,0.25), rgba(255,197,0,0.25), rgba(255,45,149,0.25));
-  filter:blur(14px);opacity:0.9;
-  animation: spin 6s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* Greeting card area (name + message) */
-.greeting{
-  margin-top:6px;padding:16px;border-radius:12px;min-width:280px;max-width:92%;
-  backdrop-filter: blur(6px);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  box-shadow: 0 10px 36px rgba(0,0,0,0.6);
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-}
-.greet-name{
-  font-weight:900;font-size:clamp(18px,4.4vw,34px);text-align:center;padding:6px 10px;border-radius:8px;
-  color:white;position:relative;
-  animation: nameGlow 3s ease-in-out infinite;
-  letter-spacing:0.6px;
-}
-@keyframes nameGlow{
-  0%{text-shadow: 0 0 6px rgba(0,255,255,0.06)}
-  50%{text-shadow: 0 0 22px rgba(255,45,149,0.18)}
-  100%{text-shadow: 0 0 6px rgba(0,255,255,0.06)}
-}
-.greet-msg{
-  font-size:clamp(14px,3.6vw,20px);color:rgba(255,255,255,0.9);text-align:center;padding:6px 12px;border-radius:6px;
-  background:linear-gradient(90deg, rgba(0,255,255,0.02), rgba(255,197,0,0.02));
-}
-
-/* Inputs and buttons row */
-.controls{
-  margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;width:100%;
-}
-.input,textarea{
-  background:rgba(0,0,0,0.35);border-radius:10px;padding:12px 14px;color:white;border:1px solid rgba(255,255,255,0.06);
-  outline:none;font-size:14px;min-width:220px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
-}
-.input::placeholder{color:rgba(255,255,255,0.45)}
-textarea{min-height:64px;resize:none}
-
-/* Neon input border */
-.neon-border{border:2px solid rgba(0,0,0,0.2);position:relative}
-.neon-border:focus-within{box-shadow: 0 0 28px rgba(0,255,255,0.06), 0 0 30px rgba(255,45,149,0.04)}
-
-/* Gift button (affiliate) */
-.gift-button{
-  display:inline-flex;align-items:center;gap:10px;padding:12px 16px;border-radius:14px;background:linear-gradient(90deg,#222, #111);
-  border:2px solid rgba(255,197,0,0.08);color:var(--accent-gold);font-weight:800;cursor:pointer;
-  box-shadow: 0 10px 34px rgba(255,197,0,0.04), 0 0 26px rgba(255,45,149,0.02);text-decoration:none;
-  transform-origin:center;
-  animation: giftPulse 4s ease-in-out infinite;
-}
-@keyframes giftPulse{
-  0%{transform:translateY(0)}
-  50%{transform:translateY(-6px) scale(1.02)}
-  100%{transform:translateY(0)}
-}
-
-/* Hand pointer animation next to gift text */
-.hand-anim{display:inline-block;animation: handBounce 1.4s ease-in-out infinite}
-@keyframes handBounce{
-  0%{transform:translateY(0)}
-  50%{transform:translateY(-8px)}
-  100%{transform:translateY(0)}
-}
-
-/* WhatsApp share */
-.share-btn{
-  display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:#075e54;color:white;font-weight:700;
-  box-shadow: 0 8px 28px rgba(7,94,84,0.14);border:1px solid rgba(255,255,255,0.04);
-}
-.share-btn img{width:18px;height:18px}
-
-/* Canvas layers for effects */
-.canvas-wrap{position:absolute;inset:0;z-index:2;pointer-events:none}
-#effects-canvas{position:absolute;inset:0;width:100%;height:100%}
-
-/* Floating emoji flowers and balloons wrapper */
-.floats{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
-
-/* Balloons style (dom elements) */
-.balloon{
-  position:absolute;top:-120px;border-radius:50%;padding:12px 14px;color:white;font-weight:800;
-  text-align:center;font-size:16px;display:flex;align-items:center;justify-content:center;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.45), 0 0 18px rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.03);
-  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.55));
-  animation: balloonDrift linear infinite;
-}
-@keyframes balloonDrift{
-  0%{transform:translateY(-10vh) rotate(0deg);opacity:0}
-  10%{opacity:1}
-  100%{transform:translateY(120vh) rotate(360deg);opacity:0.95}
-}
-
-/* Flower emoji falling spans */
-.emoji-fall{
-  position:absolute;font-size:20px;will-change:transform,opacity;pointer-events:none;
-  animation: fall linear forwards;
-}
-@keyframes fall{
-  0%{transform:translateY(-10vh) rotate(0deg);opacity:0}
-  10%{opacity:1}
-  100%{transform:translateY(110vh) rotate(720deg);opacity:0.9}
-}
-
-/* Responsive tweaks */
-@media (min-width:900px){
-  .stage{justify-content:flex-start;padding-top:36px}
-  .hero-img{margin-top:6px}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppleMoney App</title>
+    
+    <!-- Your New Ad Code -->
+<script src='//libtl.com/sdk.js' data-zone='10152298' data-sdk='show_10152298'></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #121212; color: #ffffff; }
+        .dark-bg { background-color: #121212; }
+        .card-bg { background-color: #1e1e1e; }
+        .border-accent { border-color: #ff8c00; }
+        .text-accent { color: #ff8c00; }
+        .btn, .btn-accent, .btn-outline-accent { transition: all 0.2s ease-in-out; transform: scale(1); }
+        .btn:active, .btn-accent:active, .btn-outline-accent:active { transform: scale(0.95); }
+        .btn-accent { background-color: #ff8c00; color: #121212; font-weight: bold; }
+        .btn-accent:hover { background-color: #e67e00; }
+        .btn-outline-accent { border: 1px solid #ff8c00; color: #ff8c00; }
+        .btn-outline-accent:hover { background-color: #ff8c00; color: #121212; }
+        .input-field { background-color: #2c2c2c; border: 1px solid #444; }
+        .main-page { display: none; }
+        .main-page.active { display: flex; animation: fadeIn 0.5s ease-in-out; }
+        .sub-page { display: none; }
+        .sub-page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        .bottom-nav a.active { color: #ff8c00; }
+        .notification-dot {
+            position: absolute; top: -2px; right: -2px; width: 10px; height: 10px;
+            background-color: #ef4444; border-radius: 50%; border: 2px solid #121212; display: none;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
 </head>
-<body>
-<div class="app" id="app">
-  <div class="bg-animated" aria-hidden="true"></div>
+<body class="max-w-md mx-auto">
 
-  <!-- Canvas for fireworks/confetti/sparkles -->
-  <div class="canvas-wrap" aria-hidden="true">
-    <canvas id="effects-canvas"></canvas>
-  </div>
-
-  <!-- floating DOM-based elements (flowers & balloons) -->
-  <div class="floats" id="floats"></div>
-
-  <!-- LANDING SCREEN -->
-  <div class="landing" id="landing">
-    <div class="l-card" role="dialog" aria-labelledby="landingTitle" aria-describedby="landingSub">
-      <div class="l-title" id="landingTitle">Special Independence Day message waiting for you</div>
-      <div class="l-sub" id="landingSub">Celebrate the spirit of freedom with a glowing neon surprise — click below to reveal.</div>
-      <button class="reveal-btn" id="revealBtn" aria-label="Click to reveal celebration">Click to Reveal</button>
-      <div class="reveal-small">Tap the button to start music & celebration</div>
-    </div>
-  </div>
-
-  <!-- MAIN CELEBRATION STAGE (hidden initially) -->
-  <main class="stage" id="stage" role="main" aria-live="polite">
-    <!-- Hero image (uses local rakhi.gif as provided; you may replace with a NATIONAL GIF) -->
-    <img src="rakhi.gif" alt="Independence Animated Visual" class="hero-img" id="heroImg" />
-
-    <!-- Header with disco/backlight -->
-    <div class="header-wrap" style="position:relative;">
-      <div class="happy-title" id="titleWrap">
-        <div style="position:relative;z-index:4">Happy Independence Day</div>
-        <div class="disco-ring" style="width:calc(100% + 12px);height:calc(100% + 12px);"></div>
-        <div class="happy-illum" style="border-radius:14px;"></div>
-      </div>
+    <!-- App Loader -->
+    <div id="loader" class="hidden fixed inset-0 dark-bg bg-opacity-75 flex items-center justify-center z-50">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-accent"></div>
     </div>
 
-    <!-- Greeting card: Name + Message -->
-    <section class="greeting" id="greetingCard">
-      <div class="greet-name" id="greetName">Someone</div>
-      <div class="greet-msg" id="greetMsg">aapko Independence Day ki bahut bahut badhai</div>
-
-      <!-- Inputs & actions -->
-      <div class="controls" id="controls">
-        <div style="display:flex;gap:8px;flex-direction:column">
-          <div class="neon-border">
-            <input id="nameInput" class="input" placeholder="Enter your name (e.g., Rahul)" />
-          </div>
-          <div class="neon-border">
-            <textarea id="msgInput" class="input" placeholder="Type your message (multi-line allowed)">Wishing you freedom, pride and progress!</textarea>
-          </div>
+    <!-- Authentication Section -->
+    <div id="auth-section" class="min-h-screen p-6 flex-col justify-center main-page">
+        <h1 class="text-4xl font-bold text-center mb-2 text-accent">🍎Apple Money🤑💰</h1>
+        <p class="text-center text-gray-400 mb-8">Login or Signup to continue</p>
+        <div id="auth-container">
+            <div id="login-view">
+                <input id="login-email" type="email" placeholder="Email" class="w-full p-3 rounded-lg input-field mb-4">
+                <input id="login-password" type="password" placeholder="Password" class="w-full p-3 rounded-lg input-field mb-4">
+                <button id="login-btn" class="w-full p-3 rounded-lg btn-accent mb-4">Login</button>
+                <p class="text-center text-gray-400">Don't have an account? <a href="#" id="show-signup" class="font-semibold text-accent">Sign Up</a></p>
+            </div>
+            <div id="signup-view" class="hidden">
+                 <input id="signup-name" type="text" placeholder="Full Name" class="w-full p-3 rounded-lg input-field mb-4">
+                <input id="signup-email" type="email" placeholder="Email" class="w-full p-3 rounded-lg input-field mb-4">
+                <input id="signup-password" type="password" placeholder="Password" class="w-full p-3 rounded-lg input-field mb-4">
+                <button id="signup-btn" class="w-full p-3 rounded-lg btn-accent mb-4">Sign Up</button>
+                <p class="text-center text-gray-400">Already have an account? <a href="#" id="show-login" class="font-semibold text-accent">Login</a></p>
+            </div>
         </div>
+    </div>
 
-        <!-- Buttons -->
-        <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
-          <!-- 🔥🔥 AFFILIATE LINK PLACEHOLDER -->
-          <!-- 🔥🔥 PASTE YOUR AMAZON AFFILIATE LINK BELOW 🔥🔥 -->
-          <!-- Example: <a href="https://www.amazon.in/your-affiliate-link" target="_blank" class="gift-button">🎁 Special Independence Gifts 🎁 👇</a> -->
-          <a href="YOUR_AFFILIATE_LINK" target="_blank" class="gift-button" id="giftBtn">🎁 Special Independence Gifts 🎁 <span class="hand-anim">👇</span></a>
+    <!-- Main App Container -->
+    <div id="app-container" class="min-h-screen flex-col main-page">
+        <header class="flex items-center justify-between p-4 sticky top-0 bg-opacity-80 backdrop-blur-md z-10 dark-bg">
+            <h1 class="text-xl font-bold">🍎Apple Money🤑💰</h1>
+            <div class="flex items-center space-x-4">
+                <div id="notification-bell" class="relative cursor-pointer">
+                    <i data-lucide="bell" class="w-6 h-6"></i>
+                    <div id="notification-dot" class="notification-dot"></div>
+                </div>
+                <i data-lucide="user" class="w-6 h-6 cursor-pointer" onclick="navigateTo('profile-page')"></i>
+            </div>
+        </header>
 
-          <!-- WhatsApp share -->
-          <button class="share-btn" id="shareBtn" title="Share via WhatsApp">
-            <img src="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMzAgMzAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTI0LjQxNyA1LjU4M2MtMS4zLTMuMDY0LTMuOTYtNC42ODEtNi44NzctNC42ODFIMTAuNDE2Yy0zLjY3OCAwLTYuNjE5IDMuNjY3LTYuMTI0IDcuNjM2LjQ5MyA0LjA3NSA0LjEwNSA3LjQyNSA4LjI4NyA3LjQyNmgxLjc0M3YtNS4yN2MtMS41OTYtLjg0Ny0yLjg1Ni0yLjM2OS0zLjI1OS0zLjgwMy4xMzUtLjAwNy4yNjYtLjAwNy4zOTktLjAwNyAxLjQyNiAwIDIuNzAzIDEuMDE4IDMuNTEzIDEuNjQ3Ljc4MS40NjcuOTc3IDEuMDc1Ljk2MyAxLjU0MS4wMDAuMzA0LS4wNDEuNDQ4LS4wNDEuNDQ4bC0uMDEuMDc4YzEuNjcyLTQuMDU5IDQuNDczLTYuMjk3IDkuMDg0LTYuMjk3IDEuNTQzIDAgMy4xNDMuMjk2IDQuNjM0Ljk0NHYuMjE0YzAgMy4zODUtMi45NDEgNy4yMzgtNi45MzggNy4yMzhjLTMuNjE0IDAtNi4yLTEuNjI5LTguNjM0LTQuNzY5bC00LjM3MyAxLjI4MSAxLjI3OS00LjM3Yy0zLjE0LS4zODktNS43NjMtMi41MjUtNi40NDYtNS4zOSA2LjI2LjAyOCAxMy4xMTcgMi40NDQgMTUuNjgzIDcuMDk0bC4wMDIuMDAxLjAwMi4wMDEuMDAyLjAwMWMwLS4wMDIuMDAyLS4wMDIuMDAyLS4wMDJjMC0uMDAyLjAwMi0uMDAyLjAwMi0uMDAyIiBmaWxsPSIjZmZmIi8+PC9zdmc+" alt="wa" />
-            Share on WhatsApp
-          </button>
+        <main class="flex-grow">
+            <!-- Home Page -->
+            <div id="home-page" class="p-4 space-y-6 sub-page">
+                <div class="card-bg p-4 rounded-lg flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Your Balance</p>
+                        <p class="text-3xl font-bold"><span id="coin-balance">0</span> Taka</p>
+                    </div>
+                    <button id="home-withdraw-btn" class="bg-white text-black font-semibold px-6 py-2 rounded-lg">Withdraw</button>
+                </div>
+                <section>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-lg font-semibold">Daily Tasks</h2>
+                            <p class="text-sm text-gray-400 mb-4">Complete tasks to get rewards.</p>
+                        </div>
+                        <p class="text-sm text-gray-400">Ads Left: <span id="ads-left-count">...</span></p>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="bg-orange-500 p-3 rounded-lg flex items-center justify-between text-black">
+                            <div class="flex items-center space-x-3"><span class="text-3xl">🤑</span><div><h3 class="font-bold">Watch Short Ad</h3><p class="text-xs font-medium">Rewarded Interstitial</p></div></div>
+                            <button class="bg-white text-orange-500 font-bold px-6 py-2 rounded-lg text-sm btn" onclick="claimReward('interstitial')">Claim</button>
+                        </div>
+                        <div class="card-bg p-3 rounded-lg flex items-center justify-between">
+                            <div class="flex items-center space-x-3"><span class="text-3xl">💰</span><div><h3 class="font-semibold">Click for Reward</h3><p class="text-xs text-gray-400">Rewarded Popup</p></div></div>
+                            <button class="bg-white text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="claimReward('popup')">Claim</button>
+                        </div>
+                         <div class="card-bg p-3 rounded-lg flex items-center justify-between">
+                            <div class="flex items-center space-x-3"><span class="text-3xl">💸</span><div><h3 class="font-semibold">Watch a Video</h3><p class="text-xs text-gray-400">In-App Interstitial</p></div></div>
+                            <button class="bg-gray-700 text-white font-bold px-6 py-2 rounded-lg text-sm btn" onclick="claimReward('inApp')">Start</button>
+                        </div>
+                        <div class="card-bg p-3 rounded-lg flex items-center justify-between">
+                            <div class="flex items-center space-x-3"><span class="text-3xl">🤯</span><div><h3 class="font-semibold">Play Mini App</h3><p class="text-xs text-gray-400">Get a big reward!</p></div></div>
+                            <button class="bg-blue-500 text-white font-bold px-6 py-2 rounded-lg text-sm btn" onclick="claimReward('miniApp')">Play</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Wallet Page -->
+            <div id="wallet-page" class="p-4 space-y-6 sub-page">
+                <h2 class="text-xl font-bold text-center">My Wallet</h2>
+                <div class="card-bg p-4 rounded-lg">
+                    <h3 class="font-semibold mb-3">Withdraw Earnings</h3>
+                    <p class="text-sm text-gray-400 mb-1">Current Balance: <span class="font-bold text-accent"><span id="wallet-coin-balance">0</span> Taka</span></p>
+                    <p class="text-sm text-gray-400 mb-2">Minimum Withdrawal: <span id="min-withdrawal-info">...</span> Taka</p>
+                    <p class="text-sm text-gray-400 mb-4 font-semibold" id="coin-value-info">...</p>
+                    <input id="withdraw-amount" type="number" placeholder="Enter coin amount" class="w-full p-3 rounded-lg input-field mb-3">
+                    <select id="withdraw-method" class="w-full p-3 rounded-lg input-field mb-3"></select>
+                    <div id="payment-details-container"></div>
+                    <button id="withdraw-btn" class="w-full p-3 rounded-lg btn-accent mt-3">Request Withdrawal</button>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">Withdrawal History</h3>
+                    <div id="withdrawal-history-list" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- Refer Page -->
+            <div id="refer-page" class="p-4 space-y-6 sub-page">
+                 <h2 class="text-xl font-bold text-center">Refer & Earn</h2>
+                 <div class="card-bg p-6 rounded-lg text-center">
+                     <p class="text-gray-400 mb-2">Your Referral Code</p>
+                     <div class="bg-gray-800 p-3 rounded-lg flex items-center justify-center mb-4">
+                         <span id="referral-code" class="text-2xl font-bold tracking-widest">LOADING...</span>
+                         <button id="copy-code-btn" class="ml-4"><i data-lucide="copy" class="w-6 h-6 text-gray-400"></i></button>
+                     </div>
+                     <p class="text-sm text-gray-300">Share the code with your friends.</p>
+                 </div>
+                 <button id="share-btn" class="w-full p-3 rounded-lg btn-accent">Share Your Code</button>
+                 <div class="card-bg p-4 rounded-lg mt-6">
+                    <h3 class="font-semibold mb-3 text-center">Have a Referral Code?</h3>
+                    <input id="enter-referral-code" type="text" placeholder="Enter code here" class="w-full p-3 rounded-lg input-field mb-3">
+                    <button id="apply-referral-btn" class="w-full p-3 rounded-lg btn-outline-accent">Apply Code</button>
+                 </div>
+            </div>
+                  <div id="referrals-list" class="mt-4 space-y-3"></div>
+
+
+            <!-- Profile Page -->
+            <div id="profile-page" class="p-4 space-y-6 sub-page">
+                <h2 class="text-xl font-bold text-center mb-4">Profile</h2>
+                <div class="flex flex-col items-center">
+                    <img src="https://placehold.co/100x100/1e1e1e/ff8c00?text=U" class="rounded-full mb-2">
+                    <h2 id="profile-name" class="text-xl font-bold">User Name</h2>
+                    <p id="profile-email" class="text-gray-400">user@email.com</p>
+                </div>
+                <button id="logout-btn" class="w-full mt-6 p-3 rounded-lg bg-red-600 text-white font-bold">Logout</button>
+            </div>
+            
+            <!-- Notifications Page -->
+            <div id="notifications-page" class="p-4 space-y-4 sub-page">
+                <h2 class="text-xl font-bold text-center">Notifications</h2>
+                <div id="notifications-list" class="space-y-3"></div>
+            </div>
+        </main>
+
+        <nav class="bottom-nav sticky bottom-0 grid grid-cols-4 items-center text-center py-2 card-bg">
+            <a href="#" class="nav-link" data-page="home-page"><i data-lucide="home" class="mx-auto w-6 h-6"></i><span class="text-xs">Home</span></a>
+            <a href="#" class="nav-link" data-page="wallet-page"><i data-lucide="wallet" class="mx-auto w-6 h-6"></i><span class="text-xs">Wallet</span></a>
+            <a href="#" class="nav-link" data-page="refer-page"><i data-lucide="users" class="mx-auto w-6 h-6"></i><span class="text-xs">Refer & Earn</span></a>
+            <a href="#" class="nav-link" data-page="profile-page"><i data-lucide="user" class="mx-auto w-6 h-6"></i><span class="text-xs">Profile</span></a>
+        </nav>
+    </div>
+    
+    <div id="custom-alert" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-sm text-center">
+            <p id="alert-message" class="mb-4"></p>
+            <button id="alert-ok-btn" class="btn-accent px-6 py-2 rounded-lg">OK</button>
         </div>
-      </div>
-    </section>
-  </main>
+    </div>
 
-  <!-- Audio element (local rakhi.mp3) -->
-  <audio id="bgAudio" src="rakhi.mp3" loop preload="auto"></audio>
-</div>
+    <script type="module">
+        const firebaseConfig = {
+  apiKey: "AIzaSyDpn-sHHX8CIRYtQZc1KpQ9wnvT7h-uSBA",
+  authDomain: "taka-chao-to.firebaseapp.com",
+  databaseURL: "https://taka-chao-to-default-rtdb.firebaseio.com",
+  projectId: "taka-chao-to",
+  storageBucket: "taka-chao-to.firebasestorage.app",
+  messagingSenderId: "790884034351",
+  appId: "1:790884034351:web:63e38bc5c632f88a5ca3da",
+  measurementId: "G-8LQ9MH4FDS"
+};
 
-<script>
-/*
-  Independence Day interactive single-file page
-  - Landing screen -> reveal main stage
-  - Plays local rakhi.mp3 after user click
-  - Music-reactive canvas effects (confetti/fireworks) via WebAudio Analyser
-  - Emoji flower fall, balloons DOM layer
-  - Name and message come from URL params (?name=...&msg=...) or user inputs
-  - WhatsApp share opens with current page link containing ?name & ?msg
+        
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userData = null;
+        let appConfig = {};
+
+        const loader = document.getElementById('loader');
+        const coinBalanceEl = document.getElementById('coin-balance');
+        const walletCoinBalanceEl = document.getElementById('wallet-coin-balance');
+        const profileNameEl = document.getElementById('profile-name');
+        const profileEmailEl = document.getElementById('profile-email');
+        const referralCodeEl = document.getElementById('referral-code');
+        const minWithdrawalInfoEl = document.getElementById('min-withdrawal-info');
+        const coinValueInfoEl = document.getElementById('coin-value-info');
+        const withdrawMethodSelect = document.getElementById('withdraw-method');
+        const notificationDot = document.getElementById('notification-dot');
+        const adsLeftCountEl = document.getElementById('ads-left-count');
+        const paymentDetailsContainer = document.getElementById('payment-details-container');
+
+        window.onload = () => {
+            lucide.createIcons();
+            setupEventListeners();
+            showMainPage('auth-section');
+            loader.style.display = 'none';
+            onAuthStateChanged(auth, handleAuthStateChange);
+        };
+
+        async function handleAuthStateChange(user) {
+            if (user) {
+                loader.style.display = 'flex';
+                currentUser = user;
+                await fetchUserData();
+                if (userData.isBlocked) {
+                    showAlert("Your account has been blocked.");
+                    await signOut(auth);
+                    loader.style.display = 'none';
+                    return;
+                }
+                await fetchAppConfig();
+                await checkNewNotifications();
+                updateUI();
+                showMainPage('app-container');
+                navigateTo('home-page');
+                loader.style.display = 'none';
+            } else {
+                currentUser = null;
+                userData = null;
+                showMainPage('auth-section');
+            }
+        }
+
+        async function fetchUserData() {
+            if (!currentUser) return;
+            const userRef = doc(db, "users", currentUser.uid);
+            try {
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    userData = userSnap.data();
+                } else {
+                    const ownReferralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+                    const defaultUserData = {
+                        uid: currentUser.uid, name: currentUser.displayName || currentUser.email.split('@')[0], email: currentUser.email,
+                        balance: 100, referralCode: ownReferralCode, referredBy: null,
+                        lastNotificationCheck: new Date(),
+                        createdAt: serverTimestamp(),
+                        dailyAdCount: 0, lastAdWatchDate: new Date().toISOString().split('T')[0], isBlocked: false
+                    };
+                    await setDoc(userRef, defaultUserData);
+                    userData = defaultUserData;
+                }
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                showAlert("Error loading user data.");
+            }
+        }
+
+        async function fetchAppConfig() {
+            const configRef = doc(db, "config", "main");
+            try {
+                const configSnap = await getDoc(configRef);
+                appConfig = configSnap.exists() ? configSnap.data() : { minWithdrawal: 5000, paymentMethods: ["UPI", "bKash"], dailyAdLimit: 10, coinValueCoins: 50000, coinValueInr: 500 };
+            } catch (error) {
+                console.error("Error fetching app config:", error);
+            }
+        }
+        
+        function updateUI() {
+            if (!userData) return;
+            const balance = userData.balance || 0;
+            coinBalanceEl.textContent = balance;
+            walletCoinBalanceEl.textContent = balance;
+            profileNameEl.textContent = userData.name || 'No Name';
+            profileEmailEl.textContent = userData.email || 'No Email';
+            referralCodeEl.textContent = userData.referralCode || '...';
+            minWithdrawalInfoEl.textContent = `${appConfig.minWithdrawal || 5000}`;
+            coinValueInfoEl.textContent = `${appConfig.coinValueCoins || 50000} Coins = ${appConfig.coinValueInr || 500} Taka`;
+            withdrawMethodSelect.innerHTML = '';
+            (appConfig.paymentMethods || []).forEach(method => {
+                const option = document.createElement('option');
+                option.value = method;
+                option.textContent = method;
+                withdrawMethodSelect.appendChild(option);
+            });
+            updateDynamicPaymentFields();
+            updateAdsLeftCount();
+        }
+
+        function updateAdsLeftCount() {
+            const today = new Date().toISOString().split('T')[0];
+            if (userData.lastAdWatchDate !== today) {
+                userData.dailyAdCount = 0;
+            }
+            const adsLeft = Math.max(0, (appConfig.dailyAdLimit || 1000) - userData.dailyAdCount);
+            adsLeftCountEl.textContent = adsLeft;
+        }
+
+        function updateDynamicPaymentFields() {
+            const selectedMethod = withdrawMethodSelect.value.toLowerCase();
+            let placeholder = "Enter Details";
+            if (selectedMethod.includes('upi')) placeholder = "Enter your UPI ID";
+            if (selectedMethod.includes('bkash')) placeholder = "Enter your bKash Number";
+            paymentDetailsContainer.innerHTML = `<input id="payment-detail-input" type="text" placeholder="${placeholder}" class="w-full p-3 rounded-lg input-field">`;
+        }
+
+        function showMainPage(pageId) {
+            document.querySelectorAll('.main-page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function navigateTo(pageId) {
+            document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active', 'text-accent');
+                if (link.dataset.page === pageId) link.classList.add('active', 'text-accent');
+            });
+        }
+        window.navigateTo = navigateTo;
+
+        function setupEventListeners() {
+            document.getElementById('show-signup').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('login-view').classList.add('hidden'); document.getElementById('signup-view').classList.remove('hidden'); });
+            document.getElementById('show-login').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('signup-view').classList.add('hidden'); document.getElementById('login-view').classList.remove('hidden'); });
+            document.getElementById('signup-btn').addEventListener('click', handleSignup);
+            document.getElementById('login-btn').addEventListener('click', handleLogin);
+            document.getElementById('logout-btn').addEventListener('click', handleLogout);
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const pageId = link.dataset.page;
+                    if (pageId === 'wallet-page') loadWithdrawalHistory();
+                    navigateTo(pageId);
+                });
+            });
+            document.getElementById('notification-bell').addEventListener('click', () => { navigateTo('notifications-page'); loadNotifications(); });
+            document.getElementById('copy-code-btn').addEventListener('click', copyReferralCode);
+            document.getElementById('share-btn').addEventListener('click', shareReferralCode);
+            document.getElementById('withdraw-btn').addEventListener('click', handleWithdrawal);
+            document.getElementById('home-withdraw-btn').addEventListener('click', () => navigateTo('wallet-page'));
+            document.getElementById('apply-referral-btn').addEventListener('click', handleApplyReferralCode);
+            withdrawMethodSelect.addEventListener('change', updateDynamicPaymentFields);
+        }
+
+        async function handleSignup() {
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            if (!name || !email || !password) return showAlert("Please fill all fields.");
+            loader.style.display = 'flex';
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const userRef = doc(db, "users", userCredential.user.uid);
+                await updateDoc(userRef, { name: name });
+            } catch (error) {
+                showAlert(error.message);
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            if (!email || !password) return showAlert("Please enter email and password.");
+            loader.style.display = 'flex';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                showAlert(error.message);
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        async function handleLogout() { await signOut(auth); }
+        
+        async function checkNewNotifications() {
+            const lastCheck = userData.lastNotificationCheck;
+            if (!lastCheck || typeof lastCheck.seconds === 'undefined') {
+                console.log("lastNotificationCheck is not a valid timestamp yet. Skipping check.");
+                return;
+            }
+            const q = query(collection(db, "notifications"), where("createdAt", ">", lastCheck), limit(1));
+            const querySnapshot = await getDocs(q);
+            notificationDot.style.display = querySnapshot.empty ? 'none' : 'block';
+        }
+
+        async function loadNotifications() {
+            const listEl = document.getElementById('notifications-list');
+            listEl.innerHTML = '<p class="text-gray-400">Loading...</p>';
+            notificationDot.style.display = 'none';
+            const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
+            try {
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) {
+                    listEl.innerHTML = '<p class="text-gray-400 text-center">No notifications available.</p>';
+                    return;
+                }
+                listEl.innerHTML = '';
+                querySnapshot.forEach(doc => {
+                    const msg = doc.data();
+                    const date = msg.createdAt ? msg.createdAt.toDate().toLocaleDateString() : 'N/A';
+                    listEl.innerHTML += `<div class="card-bg p-4 rounded-lg"><div class="flex justify-between items-center mb-1"><h3 class="font-bold">${msg.title}</h3><p class="text-xs text-gray-400">${date}</p></div><p class="text-sm text-gray-300">${msg.message}</p></div>`;
+                });
+                await updateDoc(doc(db, "users", currentUser.uid), { lastNotificationCheck: serverTimestamp() });
+            } catch (error) {
+                console.error("Error loading notifications:", error);
+                listEl.innerHTML = '<p class="text-red-400">Error loading notifications.</p>';
+            }
+        }
+
+        async function loadWithdrawalHistory() {
+            const historyList = document.getElementById('withdrawal-history-list');
+            historyList.innerHTML = '<p class="text-gray-400">Loading history...</p>';
+            const q = query(collection(db, "withdrawals"), where("userId", "==", currentUser.uid), orderBy("requestedAt", "desc"));
+            try {
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) {
+                    historyList.innerHTML = '<p class="text-gray-400 text-center">You haven\'t made any withdrawals yet.</p>';
+                    return;
+                }
+                historyList.innerHTML = '';
+                querySnapshot.forEach(doc => {
+                    const request = doc.data();
+                    const status = request.status;
+                    let statusColor = 'text-yellow-400';
+                    if (status === 'approved') statusColor = 'text-green-400';
+                    else if (status === 'rejected') statusColor = 'text-red-400';
+                    const date = request.requestedAt ? request.requestedAt.toDate().toLocaleDateString() : 'N/A';
+                    historyList.innerHTML += `<div class="card-bg p-3 rounded-lg flex items-center justify-between"><div><p class="font-semibold">${request.amount} Coins - ${request.method}</p><p class="text-xs text-gray-400">${date}</p></div><p class="font-bold ${statusColor} capitalize">${status}</p></div>`;
+                });
+            } catch (error) {
+                console.error("Error fetching withdrawal history: ", error);
+                historyList.innerHTML = '<p class="text-red-400 text-center">Error loading history.</p>';
+            }
+        }
+        
+        async function handleApplyReferralCode() {
+            if (userData.referredBy) return showAlert("You have already used a referral code.");
+            const codeInput = document.getElementById('enter-referral-code');
+            const code = codeInput.value.trim().toUpperCase();
+            if (!code) return showAlert("Please enter a code.");
+            if (code === userData.referralCode) return showAlert("You cannot use your own code.");
+            loader.style.display = 'flex';
+            await applyReferralBonus(code, true);
+            codeInput.value = '';
+            loader.style.display = 'none';
+        }
+
+        async function applyReferralBonus(referrerCode, isManualApply = false) {
+            const usersRef = collection(db, "users");
+            const q = query(usersRef, where("referralCode", "==", referrerCode));
+            try {
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const referrerDoc = querySnapshot.docs[0];
+                    const referrerRef = doc(db, "users", referrerDoc.id);
+                    const referrerData = referrerDoc.data();
+                    await updateDoc(referrerRef, { balance: (referrerData.balance || 0) + 100 });
+                    const newUserRef = doc(db, "users", currentUser.uid);
+                    await updateDoc(newUserRef, { balance: (userData.balance || 0) + 100, referredBy: referrerCode });
+                    userData.balance += 100; userData.referredBy = referrerCode;
+                    // register referral record (subcollection + increment count)
+                    try { await registerReferral(referrerDoc.id, currentUser.uid, userData.email || null, userData.name || null); } catch(e) { console.error('registerReferral call failed', e); }
+
+                    updateUI();
+                    if(isManualApply) showAlert("Code applied successfully! You have received 100 Taka.");
+                } else {
+                    if(isManualApply) showAlert("Invalid referral code.");
+                }
+            } catch(error) {
+                console.error("Error applying referral bonus: ", error);
+                if(isManualApply) showAlert("Error applying code.");
+            }
+        }
+
+        async function updateBalance(amount) {
+            if (!currentUser) return;
+            const newBalance = (userData.balance || 0) + amount;
+            const userRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userRef, { balance: newBalance });
+            userData.balance = newBalance;
+            updateUI();
+        }
+
+        async function handleWithdrawal() {
+            const amount = parseInt(document.getElementById('withdraw-amount').value);
+            const method = document.getElementById('withdraw-method').value;
+            const paymentDetailInput = document.getElementById('payment-detail-input');
+            const paymentDetail = paymentDetailInput ? paymentDetailInput.value.trim() : '';
+            const minWithdrawal = appConfig.minWithdrawal || 5000;
+
+            if (!amount || amount <= 0) return showAlert("Please enter a valid amount.");
+            if (amount < minWithdrawal) return showAlert(`Minimum withdrawal is ${minWithdrawal} Taka.`);
+            if (amount > userData.balance) return showAlert("Insufficient balance.");
+            if (!paymentDetail) return showAlert("Please enter payment details (e.g., UPI ID or bKash Number).");
+
+            loader.style.display = 'flex';
+            try {
+                await updateBalance(-amount);
+                await addDoc(collection(db, "withdrawals"), {
+                    userId: currentUser.uid, userName: userData.name, userEmail: userData.email,
+                    amount: amount, method: method, paymentDetail: paymentDetail, status: "pending", requestedAt: serverTimestamp()
+                });
+                showAlert("Withdrawal request submitted successfully!");
+                document.getElementById('withdraw-amount').value = '';
+                paymentDetailInput.value = '';
+                loadWithdrawalHistory();
+            } catch (error) {
+                showAlert("Error submitting request: " + error.message);
+                await updateBalance(amount); // Refund if error
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function copyReferralCode() {
+            const textToCopy = referralCodeEl.textContent;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showAlert("Referral code copied!");
+            }).catch(err => {
+                showAlert("Failed to copy code.");
+            });
+        }
+        
+        function shareReferralCode() {
+            const text = `Join Apple Money and earn money! Use my referral code to get a bonus: ${userData.referralCode}`;
+            if (navigator.share) {
+                navigator.share({ title: 'Join Apple Money!', text: text, url: window.location.href })
+                    .catch((error) => console.error("Share failed:", error));
+            } else {
+                copyReferralCode();
+                showAlert("Share feature is not available. Referral code has been copied instead!");
+            }
+        }
+
+        window.claimReward = async function(taskType) {
+            const today = new Date().toISOString().split('T')[0];
+            const userRef = doc(db, "users", currentUser.uid);
+
+            if (userData.lastAdWatchDate !== today) {
+                await updateDoc(userRef, { dailyAdCount: 0, lastAdWatchDate: today });
+                userData.dailyAdCount = 0;
+                userData.lastAdWatchDate = today;
+            }
+
+            if (userData.dailyAdCount >= (appConfig.dailyAdLimit || 1000)) {
+                return showAlert("You have reached your daily ad watch limit.");
+            }
+            
+            if (typeof window.show_10152298 !== 'function') {
+                return showAlert("Ad service is currently unavailable. Please try again later.");
+            }
+            
+            let adPromise;
+            loader.style.display = 'flex';
+            try {
+                 switch(taskType) {
+                    case 'interstitial': adPromise = window.show_10152298(); break;
+                    case 'popup': adPromise = window.show_10152298('pop'); break;
+                    case 'inApp': adPromise = window.show_10152298({ type: 'inApp', inAppSettings: { frequency: 2, capping: 0.1, interval: 30, timeout: 5, everyPage: false } }); break;
+                    case 'miniApp': adPromise = window.show_10152298(); break;
+                    default: return;
+                }
+                
+                await adPromise;
+
+                const newCount = (userData.dailyAdCount || 0) + 1;
+                await updateDoc(userRef, { dailyAdCount: newCount });
+                userData.dailyAdCount = newCount;
+                
+                let rewardAmount = 0;
+                if (taskType === 'miniApp') rewardAmount = 50;
+                else if (taskType !== 'inApp') rewardAmount = 50;
+
+                if (rewardAmount > 0) {
+                    await updateBalance(rewardAmount);
+                    showAlert(`Congratulations! You have won ${rewardAmount} coins.`);
+                }
+                updateAdsLeftCount();
+
+            } catch(e) {
+                console.error("Ad error:", e);
+                showAlert('Could not show ad. Please try again later.');
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function showAlert(message) {
+            document.getElementById('alert-message').textContent = message;
+            document.getElementById('custom-alert').classList.remove('hidden');
+            document.getElementById('alert-ok-btn').onclick = () => {
+                document.getElementById('custom-alert').classList.add('hidden');
+            };
+        }
+        window.showAlert = showAlert;
+
+    
+
+/* ===== Referral & UI Helpers - ADDED BY CHATGPT ===== */
+/* registerReferral: create subcollection record and increment referralsCount */
+async function registerReferral(referrerDocId, referredUid, referredEmail, referredName) {
+  try {
+    const referrerRef = doc(db, "users", referrerDocId);
+    const refSnap = await getDoc(referrerRef);
+    if (!refSnap.exists()) return;
+    const refData = refSnap.data();
+    const newCount = (refData.referralsCount || 0) + 1;
+    await updateDoc(referrerRef, { referralsCount: newCount });
+
+    const referralsCol = collection(db, "users", referrerDocId, "referrals");
+    await addDoc(referralsCol, {
+      referredUid: referredUid,
+      referredEmail: referredEmail || null,
+      referredName: referredName || null,
+      createdAt: serverTimestamp(),
+      likedCount: 0,
+      comment: ""
+    });
+    console.log('registerReferral: done', referrerDocId, referredUid);
+  } catch(e) {
+    console.error('registerReferral error', e);
+  }
+}
+
+/* validateReferralRequirementBeforeWithdrawal */
+async function validateReferralRequirementBeforeWithdrawal() {
+  const required = 15;
+  const uRef = doc(db, "users", currentUser.uid);
+  const s = await getDoc(uRef);
+  const d = s.exists() ? s.data() : {};
+  const count = d.referralsCount || 0;
+  if (count < required) {
+    showAlert(`Withdrawal blocked: আপনাকে কমপক্ষে ${required} টি রেফার করতে হবে। বর্তমানে: ${count}`);
+    return false;
+  }
+  return true;
+}
+
+/* loadReferralsListUI: populate #referrals-list */
+async function loadReferralsListUI() {
+  const refList = document.getElementById("referrals-list");
+  if (!refList) return;
+  refList.innerHTML = "<p class='text-gray-400'>Loading referrals...</p>";
+  try {
+    const referralsCol = collection(db, "users", currentUser.uid, "referrals");
+    const q = query(referralsCol, orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      refList.innerHTML = "<p class='text-gray-400 text-center'>No referrals yet.</p>";
+      return;
+    }
+    refList.innerHTML = "";
+    snap.forEach(docSnap => {
+      const r = docSnap.data();
+      const id = docSnap.id;
+      const dateStr = r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleString() : "";
+      const name = r.referredName || r.referredEmail || "User";
+      const liked = r.likedCount || 0;
+      const comment = r.comment || "";
+      const card = document.createElement("div");
+      card.className = "card-bg p-3 rounded-lg flex items-center justify-between";
+      card.innerHTML = `
+        <div>
+          <div class="font-semibold">${name} <span class="text-xs text-gray-400"> ${dateStr}</span></div>
+          <div class="text-xs text-gray-400 mt-1">${comment}</div>
+        </div>
+        <div class="flex flex-col items-end">
+          <button data-refid="${id}" class="like-btn bg-white text-black px-3 py-1 rounded-lg mb-2">👍 ${liked}</button>
+          <button data-refid="${id}" class="comment-edit-btn btn-outline-accent px-3 py-1 rounded-lg text-xs">Add Comment</button>
+        </div>
+      `;
+      refList.appendChild(card);
+    });
+
+    // listeners
+    refList.querySelectorAll('.like-btn').forEach(btn=>{
+      btn.addEventListener('click', async e=>{
+        const rid = btn.dataset.refid;
+        const refDoc = doc(db, "users", currentUser.uid, "referrals", rid);
+        try {
+          const s = await getDoc(refDoc);
+          const current = s.exists() ? (s.data().likedCount||0) : 0;
+          await updateDoc(refDoc, { likedCount: current + 1 });
+          btn.textContent = `👍 ${current + 1}`;
+        } catch(err){ console.error(err); }
+      });
+    });
+    refList.querySelectorAll('.comment-edit-btn').forEach(btn=>{
+      btn.addEventListener('click', async e=>{
+        const rid = btn.dataset.refid;
+        const newComment = prompt("Write a short comment:");
+        if (!newComment) return;
+        const refDoc = doc(db, "users", currentUser.uid, "referrals", rid);
+        try {
+          await updateDoc(refDoc, { comment: newComment });
+          showAlert("Comment saved.");
+          await loadReferralsListUI();
+        } catch(err){ console.error(err); showAlert("Could not save comment."); }
+      });
+    });
+
+  } catch(e) {
+    console.error('loadReferralsListUI error', e);
+    refList.innerHTML = "<p class='text-red-400'>Error loading referrals.</p>";
+  }
+}
+
+/* Hook: call loadReferralsListUI when refer-page is shown.
+   Your app likely has a navigation function; we add a simple observer on hashchange and initial check.
 */
-
-/* -----------------------
-   Utilities
-   ----------------------- */
-const $ = sel => document.querySelector(sel);
-const qsAll = sel => Array.from(document.querySelectorAll(sel));
-const clamp = (v,min,max)=> Math.max(min, Math.min(max, v));
-function urlParam(key){ return new URLSearchParams(location.search).get(key) }
-
-/* -----------------------
-   Elements
-   ----------------------- */
-const landing = $('#landing');
-const revealBtn = $('#revealBtn');
-const stage = $('#stage');
-const audioEl = $('#bgAudio');
-const canvas = document.getElementById('effects-canvas');
-const floats = $('#floats');
-const heroImg = $('#heroImg');
-const greetName = $('#greetName');
-const greetMsg = $('#greetMsg');
-const nameInput = $('#nameInput');
-const msgInput = $('#msgInput');
-const giftBtn = $('#giftBtn');
-const shareBtn = $('#shareBtn');
-
-/* -----------------------
-   Defaults (Independence Day prompt applied)
-   Hindi defaults for Independence Day as requested
-   ----------------------- */
-const DEFAULT_NAME = 'Someone';
-const DEFAULT_MSG  = 'aapko Independence Day ki bahut bahut badhai';
-
-/* -----------------------
-   Handle URL params or inputs
-   ----------------------- */
-function setGreetingFromParamsOrInputs(){
-  const pName = urlParam('name');
-  const pMsg  = urlParam('msg');
-  const name = pName ? decodeURIComponent(pName) : (nameInput.value.trim() || DEFAULT_NAME);
-  const msg  = pMsg  ? decodeURIComponent(pMsg)  : (msgInput.value.trim()  || DEFAULT_MSG);
-  greetName.textContent = `${name} ki taraf se`;
-  greetMsg.textContent  = msg;
-  // input placeholders reflect source
-  if(!pName) nameInput.value = name === DEFAULT_NAME ? '' : name;
-  if(!pMsg)  msgInput.value = msg === DEFAULT_MSG ? 'Wishing you freedom, pride and progress!' : msg;
-}
-setGreetingFromParamsOrInputs();
-
-/* Update greeting when inputs change (live update) */
-nameInput.addEventListener('input', () => {
-  const name = nameInput.value.trim() || DEFAULT_NAME;
-  greetName.textContent = `${name} ki taraf se`;
-});
-msgInput.addEventListener('input', () => {
-  const msg = msgInput.value.trim() || DEFAULT_MSG;
-  greetMsg.textContent = msg;
-});
-
-/* -----------------------
-   WhatsApp share handler
-   ----------------------- */
-shareBtn.addEventListener('click', () => {
-  const name = encodeURIComponent(nameInput.value.trim() || DEFAULT_NAME);
-  const msg  = encodeURIComponent(msgInput.value.trim()  || DEFAULT_MSG);
-  // Construct share URL that also links to current page with name/msg params
-  const pageLink = `${location.origin}${location.pathname}?name=${name}&msg=${msg}`;
-  const text = encodeURIComponent(`${nameInput.value.trim() || DEFAULT_NAME} ki taraf se: ${msgInput.value.trim() || DEFAULT_MSG} — ${pageLink}`);
-  const wa = `https://api.whatsapp.com/send?text=${text}`;
-  window.open(wa, '_blank');
-});
-
-/* -----------------------
-   Reveal flow: start audio + show stage
-   ----------------------- */
-let audioCtx, analyser, sourceNode, freqData;
-
-async function startAudioAndVisuals(){
-  try{
-    // Create WebAudio context and analyser for music-reactive visuals
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 2048;
-    const audioSrc = audioEl;
-    sourceNode = audioCtx.createMediaElementSource(audioSrc);
-    sourceNode.connect(analyser);
-    analyser.connect(audioCtx.destination);
-
-    freqData = new Uint8Array(analyser.frequencyBinCount);
-
-    // Play audio (user gesture ensures autoplay permitted)
-    await audioEl.play();
-    // Some browsers require resume()
-    if(audioCtx.state === 'suspended') await audioCtx.resume();
-
-    // Start canvas render loop
-    startCanvasLoop();
-    // Start periodic falling emojis + balloons
-    startFlowersAndBalloons();
-  }catch(err){
-    console.warn('Audio start error:', err);
-  }
-}
-
-/* Reveal button */
-revealBtn.addEventListener('click', async () => {
-  // Fade landing out
-  landing.classList.add('hidden');
-
-  // Show stage
-  stage.classList.add('visible');
-
-  // Start audio and visuals
-  await startAudioAndVisuals();
-
-  // Update greeting (if URL params present)
-  setGreetingFromParamsOrInputs();
-});
-
-/* -----------------------
-   Canvas effects (confetti, fireworks, sparkles)
-   Music-reactive using analyser
-   ----------------------- */
-const ctx = canvas.getContext('2d');
-let W, H, particles = [], lastTime = 0;
-
-function resizeCanvas(){
-  W = canvas.width = innerWidth * devicePixelRatio;
-  H = canvas.height = innerHeight * devicePixelRatio;
-  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-}
-addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-class Particle {
-  constructor(x,y, vx,vy, size, life, hue, type='confetti'){
-    this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.size=size;this.life=life;this.hue=hue;this.age=0;this.type=type;
-  }
-  update(dt){
-    this.x += this.vx * dt;
-    this.y += this.vy * dt;
-    this.vy += 60 * dt; // gravity effect
-    this.age += dt;
-  }
-  draw(ctx){
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    if(this.type==='spark'){
-      ctx.fillStyle = `hsla(${this.hue},95%,60%,${1 - this.age/this.life})`;
-      ctx.beginPath(); ctx.arc(this.x,this.y,this.size*(1 - this.age/this.life),0,Math.PI*2); ctx.fill();
-    }else{
-      ctx.translate(this.x,this.y);
-      ctx.rotate((this.age*10 + this.size)*0.1);
-      ctx.fillStyle = `hsl(${this.hue},85%,60%)`;
-      ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+function tryLoadReferralsOnRoute() {
+  try {
+    const el = document.getElementById('refer-page');
+    if (!el) return;
+    // if refer-page visible (not hidden via .hidden or display none), load list
+    const style = window.getComputedStyle(el);
+    if (style.display !== 'none' && el.offsetParent !== null) {
+      // visible
+      if (currentUser) loadReferralsListUI();
     }
-    ctx.restore();
-  }
+  } catch(e){}
 }
+window.addEventListener('hashchange', tryLoadReferralsOnRoute);
+window.addEventListener('popstate', tryLoadReferralsOnRoute);
+// also call after auth ready
+setTimeout( ()=>{ tryLoadReferralsOnRoute(); }, 1500);
 
-function spawnBurst(x,y,intensity=1){
-  const count = Math.floor(12 * intensity);
-  for(let i=0;i<count;i++){
-    const angle = Math.random()*Math.PI*2;
-    const speed = 120 + Math.random()*220*intensity;
-    const vx = Math.cos(angle)*speed;
-    const vy = Math.sin(angle)*speed;
-    particles.push(new Particle(x,y,vx,vy,4 + Math.random()*6, 0.8 + Math.random()*0.8, Math.random()*360, 'confetti'));
-  }
-  // sparkles
-  for(let i=0;i<8;i++){
-    const angle = Math.random()*Math.PI*2;
-    const speed = 40 + Math.random()*140*intensity;
-    particles.push(new Particle(x,y,Math.cos(angle)*speed,Math.sin(angle)*speed,2 + Math.random()*3,0.6 + Math.random()*0.6, Math.random()*360,'spark'));
-  }
-}
+/* ===== End Referral Helpers ===== */
 
-function startCanvasLoop(){
-  lastTime = performance.now();
-  requestAnimationFrame(tick);
-}
-
-function tick(now){
-  const dt = (now - lastTime)/1000; lastTime = now;
-  // Analyse audio for beat/volume
-  let amplitude = 0;
-  if(analyser){
-    analyser.getByteFrequencyData(freqData);
-    // compute average amplitude on lower-mid frequencies
-    let sum=0, count=0;
-    for(let i=0;i<freqData.length;i++){
-      // focus on bass & lower mids
-      if(i < freqData.length * 0.25){
-        sum += freqData[i]; count++;
-      }
-    }
-    amplitude = (count ? sum/count : 0) / 255; // 0..1
-  }
-
-  // occasionally spawn bursts based on amplitude peaks
-  if(Math.random() < amplitude * 0.08 + 0.005){
-    const x = Math.random() * W / devicePixelRatio;
-    const y = 80 + Math.random()* (H/3 / devicePixelRatio);
-    spawnBurst(x,y, 0.6 + amplitude*1.6);
-  }
-
-  // update particles
-  for(let i=particles.length-1;i>=0;i--){
-    const p = particles[i];
-    p.update(dt);
-    if(p.age > p.life) particles.splice(i,1);
-  }
-
-  // draw background subtle
-  ctx.clearRect(0,0, W, H);
-  // subtle neon radial glow center
-  const grad = ctx.createRadialGradient(W/2, H/3, 10, W/2, H/3, Math.max(W,H));
-  grad.addColorStop(0, 'rgba(255,45,149,' + (0.06 + amplitude*0.08) + ')');
-  grad.addColorStop(0.6, 'rgba(0,240,255,' + (0.02 + amplitude*0.04) + ')');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0,0, W, H);
-
-  // draw particles
-  particles.forEach(p => p.draw(ctx));
-
-  // small periodic fireworks (top center) based on amplitude threshold
-  if(amplitude > 0.42 && Math.random() < amplitude * 0.4){
-    const x = W/2 / devicePixelRatio * (0.6 + Math.random()*0.8 - 0.4);
-    const y = Math.random() * (H/4 / devicePixelRatio) + 40;
-    spawnBurst(x,y, 1.2 + amplitude*2.4);
-  }
-
-  requestAnimationFrame(tick);
-}
-
-/* -----------------------
-   Flowers falling & Balloons DOM layer
-   ----------------------- */
-
-const flowerEmojis = ['🌺','💐','🥀','🌹','🌸','🌼','🌻','🌟','🌈'];
-function spawnFlower(x){
-  const span = document.createElement('div');
-  span.className = 'emoji-fall';
-  span.style.left = (x || (Math.random()*90 + 5)) + 'vw';
-  span.style.top = '-8vh';
-  span.style.fontSize = (14 + Math.random()*22) + 'px';
-  span.textContent = flowerEmojis[Math.floor(Math.random()*flowerEmojis.length)];
-  const duration = 6 + Math.random()*6;
-  span.style.animationDuration = duration + 's';
-  span.style.animationDelay = (Math.random()*0.6) + 's';
-  span.style.transform = `rotate(${Math.random()*90 - 45}deg)`;
-  floats.appendChild(span);
-  // remove after animation
-  setTimeout(()=>span.remove(), (duration+1)*1000);
-}
-
-/* Balloons */
-function spawnBalloon(){
-  const b = document.createElement('div');
-  b.className = 'balloon';
-  const size = 36 + Math.random()*70;
-  b.style.width = size + 'px';
-  b.style.height = size + 'px';
-  b.style.left = (Math.random()*80 + 5) + 'vw';
-  b.style.top = (-40 - Math.random()*60) + 'px';
-  // neon random color
-  const hue = Math.floor(Math.random()*360);
-  b.style.background = `linear-gradient(135deg, hsla(${hue},90%,55%,0.96), hsla(${(hue+40)%360},90%,48%,0.92))`;
-  b.style.boxShadow = `0 12px 36px rgba(0,0,0,0.4), 0 0 20px hsla(${hue},90%,60%,0.12)`;
-  b.style.animationDuration = (10 + Math.random()*18) + 's';
-  b.style.opacity = 0.95;
-  b.textContent = '🎈';
-  floats.appendChild(b);
-  setTimeout(()=>b.remove(), (parseFloat(b.style.animationDuration)+0.3)*1000);
-}
-
-/* Start periodic spawning but reduced density (25%) for flowers as requested */
-let flowerInterval, balloonInterval;
-function startFlowersAndBalloons(){
-  // gentle continuous low-density spawn for flowers
-  flowerInterval = setInterval(()=>{
-    // 25% density: spawn with lower chance
-    if(Math.random() < 0.28) spawnFlower();
-  }, 360);
-  // balloons slower
-  balloonInterval = setInterval(()=>{
-    if(Math.random() < 0.35) spawnBalloon();
-  }, 1200);
-}
-
-/* -----------------------
-   Make sure full-screen never scrolls
-   ----------------------- */
-document.body.style.height = '100vh';
-document.documentElement.style.height = '100vh';
-document.documentElement.style.overflow = 'hidden';
-
-/* -----------------------
-   On load: If URL has params, automatically show them (do not auto-reveal)
-   - We will show values in greeting, reveal still required for music/visuals.
-   ----------------------- */
-window.addEventListener('load', ()=>{
-  const pName = urlParam('name');
-  const pMsg  = urlParam('msg');
-  if(pName) nameInput.value = decodeURIComponent(pName);
-  if(pMsg)  msgInput.value = decodeURIComponent(pMsg);
-  setGreetingFromParamsOrInputs();
-});
-
-/* -----------------------
-   Nice accessibility: reveal via Enter key when focused
-   ----------------------- */
-revealBtn.addEventListener('keydown', (e) => {
-  if(e.key === 'Enter' || e.key === ' ') revealBtn.click();
-});
-
-/* -----------------------
-   Polishing: subtle neon lighting on hero image based on audio amplitude
-   ----------------------- */
-function animateHeroGlow(){
-  if(!analyser) { requestAnimationFrame(animateHeroGlow); return; }
-  analyser.getByteFrequencyData(freqData);
-  let sum=0, c=0;
-  for(let i=0;i<freqData.length;i++){ if(i < freqData.length*0.25){ sum+=freqData[i]; c++ } }
-  const amp = (c? sum/c : 0)/255;
-  // apply CSS shadow intensity
-  heroImg.style.boxShadow = `0 20px 60px rgba(0,0,0,${0.6 - amp*0.2}), 0 0 ${20 + amp*60}px rgba(255,45,149,${0.06 + amp*0.18})`;
-  // slightly pulse image scale based on beat
-  const scale = 1 + amp * 0.035;
-  heroImg.style.transform = `scale(${scale})`;
-  requestAnimationFrame(animateHeroGlow);
-}
-requestAnimationFrame(animateHeroGlow);
-
-/* -----------------------
-   Final: ensure all interactive controls are accessible
-   ----------------------- */
-nameInput.addEventListener('change', ()=> setGreetingFromParamsOrInputs());
-msgInput.addEventListener('change', ()=> setGreetingFromParamsOrInputs());
-
-/* End of script */
 </script>
 </body>
 </html>

@@ -135,7 +135,7 @@
             </div>
    <!-- massage Page -->
             <div id="massage-page" class="p-4 space-y-6 sub-page">
-                <h2 class="text-xl font-bold text-center">My Massage</h2>>
+                <h2 class="text-xl font-bold text-center"></h2>>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -155,27 +155,29 @@
     .msg-time { font-size: 0.7rem; color: #9ca3af; margin-left: 6px; }
     .tick { font-size: 0.75rem; color: rgba(255,255,255,0.85); margin-left:6px; }
     .user-active { outline: 2px solid rgba(255,140,0,0.12); }
-    /* ensure chat messages area shows latest at bottom */
     .chat-messages { display:flex; flex-direction:column; gap:8px; }
     .message-bubble { word-wrap: break-word; white-space:pre-wrap; }
-    /* small responsive */
     @media (min-width: 768px) {
       body.max-w-md { max-width: 600px; }
     }
+    .btn { padding:6px 10px; border-radius:8px; font-weight:600; }
   </style>
 </head>
-  <header class="p-4 flex items-center justify-between card-bg sticky top-0">
-    <h1 class="text-xl font-bold text-accent">💬 Messages</h1>
-    <button onclick="window.open(home-page)>" class="text-gray-400 hover:text-white">
-      <i data-lucide="arrow-left"></i>
-    </button>
-  </header>
 <body class="max-w-md mx-auto">
 
- 
+  <header class="p-4 flex items-center justify-between card-bg sticky top-0 z-20">
+    <h1 class="text-xl font-bold text-accent">💬 Messages</h1>
+    <div class="flex items-center gap-2">
+      <!-- Start session button will appear when user is logged in but session not started -->
+      <button id="start-session-btn" class="btn bg-green-600 text-black hidden">Start Messages</button>
+      <button id="signout-btn" class="btn bg-red-600 text-white hidden">Sign out</button>
+      <button id="back-btn" class="text-gray-400 hover:text-white">
+        <i data-lucide="arrow-left"></i>
+      </button>
+    </div>
+  </header>
 
   <main class="p-4 grid grid-cols-1 gap-4">
-    <!-- two-column feel: list at top, chat below; list always visible so user can switch -->
     <div id="user-list" class="space-y-2"></div>
 
     <div id="chat-box" class="hidden flex flex-col h-[65vh]">
@@ -204,10 +206,15 @@
   </main>
 
   <audio id="notify-sound" src="data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAA..." preload="auto"></audio>
-  <!-- Note: above base64 is placeholder tiny silent sound; if you have a real sound file, replace src with URL -->
 
   <script type="module">
-    // --- Firebase config (kept as provided)
+    // -----------------------
+    // Updated message.html
+    // - Auto-login disabled: you must press "Start Messages" to start presence & load users.
+    // - Latest message moves user's row to top regardless who sent it.
+    // - Play notify sound only for incoming messages (sender != currentUser.uid).
+    // -----------------------
+
     const firebaseConfig = {
       apiKey: "AIzaSyDpn-sHHX8CIRYtQZc1KpQ9wnvT7h-uSBA",
       authDomain: "taka-chao-to.firebaseapp.com",
@@ -220,7 +227,7 @@
     };
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
     import { getFirestore, collection, query, onSnapshot, addDoc, orderBy, doc, setDoc, updateDoc, where, getDocs, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
     import { getDatabase, ref, onDisconnect, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
@@ -229,7 +236,7 @@
     const db = getFirestore(app);
     const rtdb = getDatabase(app);
 
-    // DOM elements
+    // DOM
     const userListEl = document.getElementById('user-list');
     const chatBox = document.getElementById('chat-box');
     const chatMessagesEl = document.getElementById('chat-messages');
@@ -241,14 +248,18 @@
     const notifySound = document.getElementById('notify-sound');
     const closeChatBtn = document.getElementById('close-chat-btn');
 
-    // state
+    const startSessionBtn = document.getElementById('start-session-btn');
+    const signoutBtn = document.getElementById('signout-btn');
+
     let currentUser = null;
+    let sessionStarted = false; // explicit session start flag
     let activeChatUser = null;
     let unsubscribeMessages = null;
-    const userListeners = {}; // map uid -> unsubscribe for last-message listener
-    const userElements = {}; // map uid -> element for quick access
 
-    // Helper utilities
+    // maps for stable DOM and listeners
+    const userElements = new Map();
+    const userUnsubLatest = new Map();
+
     function formatTime(ts) {
       if (!ts) return '';
       try {
@@ -256,20 +267,17 @@
         const hh = d.getHours().toString().padStart(2, '0');
         const mm = d.getMinutes().toString().padStart(2, '0');
         return `${hh}:${mm}`;
-      } catch (e) {
-        return '';
-      }
+      } catch (e) { return ''; }
     }
 
     function playNotify() {
       try {
         notifySound.currentTime = 0;
         notifySound.volume = 0.3;
-        notifySound.play().catch(()=>{/* ignore autoplay block */});
-      } catch(e) {}
+        notifySound.play().catch(()=>{});
+      } catch(e){}
     }
 
-    // Presence setup
     function setupPresence(uid) {
       const statusRef = ref(rtdb, `status/${uid}`);
       set(statusRef, { online: true, lastSeen: Date.now() });
@@ -280,8 +288,7 @@
       const statusRef = ref(rtdb, `status/${uid}`);
       onValue(statusRef, (snapshot) => {
         const data = snapshot.val();
-        if (!dotEl) return;
-        dotEl.className = data && data.online ? 'online-dot' : 'offline-dot';
+        if (dotEl) dotEl.className = data && data.online ? 'online-dot' : 'offline-dot';
         if (subtextEl) {
           if (data && data.online) subtextEl.textContent = 'Online';
           else if (data && data.lastSeen) {
@@ -289,157 +296,177 @@
             subtextEl.textContent = `Last: ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
           } else subtextEl.textContent = '';
         }
-        // if active chat user changed status, update header dot too
         if (activeChatUser && uid === activeChatUser.uid) {
           chatStatusDot.className = data && data.online ? 'online-dot' : 'offline-dot';
         }
       });
     }
 
-    // Load users and attach per-user latest-message listener (to show preview and reorder)
-    async function loadUsers() {
+    function upsertUserRow(userDoc) {
+      const user = userDoc.data ? userDoc.data() : userDoc;
+      const uid = user.uid;
+      if (!uid || (currentUser && uid === currentUser.uid)) return;
+
+      if (userElements.has(uid)) {
+        const { el } = userElements.get(uid);
+        const nameEl = el.querySelector('.name');
+        if (nameEl && nameEl.textContent !== (user.name || user.email || '')) {
+          nameEl.textContent = user.name || user.email || '';
+        }
+        // update stored data
+        userElements.get(uid).data = user;
+        return;
+      }
+
+      const userEl = document.createElement('div');
+      userEl.className = "flex items-center justify-between card-bg p-3 rounded-lg cursor-pointer hover:bg-gray-800 transition user-row";
+      userEl.dataset.uid = uid;
+      userEl.innerHTML = `
+        <div class="flex items-center space-x-3">
+          <span id="status-${uid}" class="offline-dot"></span>
+          <div>
+            <p class="font-semibold name">${escapeHtml(user.name || user.email || 'User')}</p>
+            <p class="user-preview" id="preview-${uid}"></p>
+          </div>
+        </div>
+        <div class="flex flex-col items-end">
+          <span class="msg-time" id="preview-time-${uid}"></span>
+        </div>
+      `;
+      userEl.onclick = () => {
+        openChat(user);
+      };
+
+      userListEl.appendChild(userEl);
+      userElements.set(uid, { el: userEl, data: user });
+
+      const dot = document.getElementById(`status-${uid}`);
+      watchPresence(uid, dot);
+
+      attachLatestMessageListener(uid);
+    }
+
+    function removeUserRow(uid) {
+      const entry = userElements.get(uid);
+      if (entry) {
+        if (entry.el && entry.el.parentNode) entry.el.parentNode.removeChild(entry.el);
+        userElements.delete(uid);
+      }
+      if (userUnsubLatest.has(uid)) {
+        const unsub = userUnsubLatest.get(uid);
+        if (typeof unsub === 'function') unsub();
+        userUnsubLatest.delete(uid);
+      }
+    }
+
+    function loadUsers() {
       const q = query(collection(db, "users"));
       onSnapshot(q, (snapshot) => {
-        userListEl.innerHTML = "";
-        snapshot.forEach((docSnap) => {
-          const user = docSnap.data();
-          if (!user.uid) return;
-          if (user.uid === currentUser.uid) return;
-
-          // create or reuse element
-          let userEl = userElements[user.uid];
-          if (!userEl) {
-            userEl = document.createElement('div');
-            userEl.className = "flex items-center justify-between card-bg p-3 rounded-lg cursor-pointer hover:bg-gray-800 transition user-row";
-            userEl.dataset.uid = user.uid;
-            userEl.innerHTML = `
-              <div class="flex items-center space-x-3">
-                <span id="status-${user.uid}" class="offline-dot"></span>
-                <div>
-                  <p class="font-semibold name">${escapeHtml(user.name || user.email)}</p>
-                  <p class="user-preview" id="preview-${user.uid}"></p>
-                </div>
-              </div>
-              <div class="flex flex-col items-end">
-                <span class="msg-time" id="preview-time-${user.uid}"></span>
-              </div>
-            `;
-            userEl.onclick = () => openChat(user);
-            userListEl.appendChild(userEl);
-            userElements[user.uid] = userEl;
-
-            // watch presence for this user
-            const dot = document.getElementById(`status-${user.uid}`);
-            watchPresence(user.uid, dot);
-          } else {
-            // update name/email if changed
-            const nameEl = userEl.querySelector('.name');
-            if (nameEl) nameEl.textContent = user.name || user.email;
-          }
-
-          // attach a listener for the latest message of this chat to show preview & reorder
-          attachLatestMessageListener(user.uid);
+        const seen = new Set();
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          if (!data || !data.uid) return;
+          if (currentUser && data.uid === currentUser.uid) return;
+          seen.add(data.uid);
+          upsertUserRow(docSnap);
         });
+
+        // remove deleted
+        const toRemove = [];
+        for (const uid of userElements.keys()) {
+          if (!seen.has(uid)) toRemove.push(uid);
+        }
+        toRemove.forEach(uid => removeUserRow(uid));
+
+        // ensure visible
+        if (userListEl.classList.contains('hidden')) userListEl.classList.remove('hidden');
+
         lucide.createIcons();
+      }, (err) => {
+        console.error("users onSnapshot error:", err);
       });
     }
 
-    // attach a listener to the latest message between currentUser and otherUid
     function attachLatestMessageListener(otherUid) {
       if (!currentUser) return;
+      if (userUnsubLatest.has(otherUid)) return;
       const chatId = getChatId(currentUser.uid, otherUid);
       const msgsRef = collection(db, "messages", chatId, "chats");
       const qLatest = query(msgsRef, orderBy("timestamp", "desc"), limit(1));
-      // if already have listener, skip
-      if (userListeners[otherUid]) return;
       const unsubscribe = onSnapshot(qLatest, (snap) => {
-        let previewText = "";
-        let previewTime = "";
-        snap.forEach(docSnap => {
-          const m = docSnap.data();
-          previewText = (m.senderId === currentUser.uid ? "You: " : "") + (m.text || "");
-          previewTime = m.timestamp ? formatTime(m.timestamp) : "";
-        });
+        let latest = null;
+        snap.forEach(d => { latest = d.data(); latest._id = d.id; });
         const previewEl = document.getElementById(`preview-${otherUid}`);
         const timeEl = document.getElementById(`preview-time-${otherUid}`);
-        if (previewEl) previewEl.textContent = previewText;
-        if (timeEl) timeEl.textContent = previewTime;
+        if (previewEl) previewEl.textContent = latest ? ((latest.senderId === currentUser.uid ? "You: " : "") + (latest.text || '')) : '';
+        if (timeEl) timeEl.textContent = latest ? (latest.timestamp ? formatTime(latest.timestamp) : '...') : '';
 
-        // if latest message exists and sender != currentUser -> move this user to top & play sound
-        snap.forEach(docSnap => {
-          const m = docSnap.data();
-          if (m && m.senderId !== currentUser.uid) {
-            // move to top
-            const el = userElements[otherUid];
-            if (el) userListEl.prepend(el);
-            // show unread indicator (simple) by adding bold preview
-            if (previewEl) previewEl.style.fontWeight = '600';
-            // if not currently active chat with this user, play sound
-            if (!activeChatUser || activeChatUser.uid !== otherUid) {
-              playNotify();
+        // Move to top regardless of who sent
+        if (latest) {
+          const entry = userElements.get(otherUid);
+          if (entry && entry.el && entry.el.parentNode) {
+            userListEl.prepend(entry.el);
+            // add emphasis if unread and not active chat
+            const pe = entry.el.querySelector(`#preview-${otherUid}`);
+            if (pe) {
+              if (!activeChatUser || activeChatUser.uid !== otherUid) pe.style.fontWeight = '600';
+              else pe.style.fontWeight = '400';
             }
-          } else {
-            // if it's own message, remove bold
-            if (previewEl) previewEl.style.fontWeight = '400';
+            // play sound only for incoming messages
+            if (latest.senderId && latest.senderId !== currentUser.uid) {
+              if (!activeChatUser || activeChatUser.uid !== otherUid) playNotify();
+            }
           }
-        });
+        }
+      }, (err) => {
+        console.error("latest message listener error for", otherUid, err);
       });
-      userListeners[otherUid] = unsubscribe;
+      userUnsubLatest.set(otherUid, unsubscribe);
     }
 
-    // open a chat
+    function getChatId(a,b) { return [a,b].sort().join("_"); }
+
     function openChat(user) {
       activeChatUser = user;
-      // visually mark active user
-      Object.values(userElements).forEach(el => el.classList.remove('user-active'));
-      const myEl = userElements[user.uid];
-      if (myEl) myEl.classList.add('user-active');
+      userElements.forEach(({ el }, uid) => {
+        el.classList.toggle('user-active', uid === user.uid);
+      });
 
       chatBox.classList.remove("hidden");
-      chatUsernameEl.textContent = user.name || user.email;
-      chatSubtextEl.textContent = "";
-
-      // status dot (will be updated by watchPresence)
+      chatUsernameEl.textContent = user.name || user.email || 'User';
+      chatSubtextEl.textContent = '';
       const dot = document.getElementById(`status-${user.uid}`);
       if (dot) chatStatusDot.className = dot.className;
-
-      // ensure we watch presence in header as well
       watchPresence(user.uid, chatStatusDot, chatSubtextEl);
 
-      // unsubscribe previous messages
-      if (unsubscribeMessages) unsubscribeMessages();
-      chatMessagesEl.innerHTML = "";
+      if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
+      chatMessagesEl.innerHTML = '';
 
       const chatId = getChatId(currentUser.uid, user.uid);
       const msgsRef = collection(db, "messages", chatId, "chats");
       const q = query(msgsRef, orderBy("timestamp"));
 
       unsubscribeMessages = onSnapshot(q, (snapshot) => {
-        // render messages using doc id -> update existing DOM nodes to allow status update
         snapshot.forEach(docSnap => {
           const msg = docSnap.data();
           const id = docSnap.id;
-          // try find existing element
-          let existing = document.getElementById(`msg-${id}`);
-          if (!existing) {
-            // create new
-            const wrapper = document.createElement('div');
-            wrapper.id = `msg-${id}`;
-            wrapper.className = msg.senderId === currentUser.uid ? "flex justify-end" : "flex justify-start";
-            const timeText = msg.timestamp ? formatTime(msg.timestamp) : null;
-            // bubble
+          let node = document.getElementById(`msg-${id}`);
+          if (!node) {
+            node = document.createElement('div');
+            node.id = `msg-${id}`;
+            node.className = msg.senderId === currentUser.uid ? "flex justify-end" : "flex justify-start";
             const bubble = document.createElement('div');
             bubble.className = `message-bubble max-w-[80%] p-2 rounded-lg ${msg.senderId === currentUser.uid ? 'bg-orange-500 text-black' : 'bg-gray-700 text-white'}`;
+            const timeText = msg.timestamp ? formatTime(msg.timestamp) : null;
             bubble.innerHTML = `<div>${escapeHtml(msg.text || '')}</div>
               <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:6px;">
                 <span class="msg-time">${timeText ? escapeHtml(timeText) : 'Sending...'}</span>
                 ${msg.senderId === currentUser.uid ? `<span class="tick">${msg.timestamp ? '✓' : '⏳'}</span>` : ''}
               </div>`;
-            wrapper.appendChild(bubble);
-            chatMessagesEl.appendChild(wrapper);
+            node.appendChild(bubble);
+            chatMessagesEl.appendChild(node);
           } else {
-            // update timestamp/status if changed
-            const bubble = existing.querySelector('.message-bubble');
+            const bubble = node.querySelector('.message-bubble');
             if (bubble) {
               const timeSpan = bubble.querySelector('.msg-time');
               const tickSpan = bubble.querySelector('.tick');
@@ -449,19 +476,14 @@
             }
           }
         });
-        // mark unread preview weight down for active user
+        chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
         const previewEl = document.getElementById(`preview-${activeChatUser.uid}`);
         if (previewEl) previewEl.style.fontWeight = '400';
-        // scroll to bottom
-        chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+      }, (err) => {
+        console.error("messages onSnapshot error:", err);
       });
     }
 
-    function getChatId(uid1, uid2) {
-      return [uid1, uid2].sort().join("_");
-    }
-
-    // send message
     sendBtn.addEventListener('click', async () => {
       const text = messageInput.value.trim();
       if (!text || !activeChatUser) return;
@@ -470,31 +492,25 @@
       const chatId = getChatId(currentUser.uid, activeChatUser.uid);
       const msgRef = collection(db, "messages", chatId, "chats");
 
-      // add doc with server timestamp; UI will show 'Sending...' until serverTimestamp resolves
-      await addDoc(msgRef, {
-        senderId: currentUser.uid,
-        receiverId: activeChatUser.uid,
-        text: text,
-        timestamp: serverTimestamp()
-      });
-
-      // after add, the onSnapshot will update UI (timestamp etc.)
+      try {
+        await addDoc(msgRef, {
+          senderId: currentUser.uid,
+          receiverId: activeChatUser.uid,
+          text: text,
+          timestamp: serverTimestamp()
+        });
+      } catch (e) {
+        console.error("send message error:", e);
+      }
     });
 
-    // close chat properly
     function closeChat() {
       chatBox.classList.add("hidden");
-      // keep user list visible so user can open other inboxes
       activeChatUser = null;
-      if (unsubscribeMessages) {
-        unsubscribeMessages();
-        unsubscribeMessages = null;
-      }
-      // remove active highlight
-      Object.values(userElements).forEach(el => el.classList.remove('user-active'));
+      if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
+      userElements.forEach(({ el }) => el.classList.remove('user-active'));
     }
 
-    // simple sanitize for inner text injection
     function escapeHtml(unsafe) {
       if (!unsafe && unsafe !== 0) return '';
       return String(unsafe)
@@ -505,30 +521,60 @@
         .replaceAll("'", "&#039;");
     }
 
-    // auth handling
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "index.html";
+    // AUTH: do NOT auto-start session. Instead, provide controls.
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user || null;
+      sessionStarted = false; // always require explicit start
+      // show appropriate header controls
+      if (currentUser) {
+        startSessionBtn.classList.remove('hidden');
+        signoutBtn.classList.remove('hidden');
+      } else {
+        startSessionBtn.classList.add('hidden');
+        signoutBtn.classList.add('hidden');
+        // Keep user list empty & hidden until session started
+        userListEl.innerHTML = '';
+        chatBox.classList.add('hidden');
+      }
+    });
+
+    // Start session: will setup presence & load users
+    startSessionBtn.addEventListener('click', () => {
+      if (!currentUser) {
+        alert('No authenticated user. Please login first.');
         return;
       }
-      currentUser = user;
-      setupPresence(user.uid);
+      if (sessionStarted) return;
+      sessionStarted = true;
+      // set presence & load users
+      setupPresence(currentUser.uid);
       loadUsers();
+      startSessionBtn.classList.add('hidden'); // hide start
     });
 
-    // close button wiring
+    signoutBtn.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        sessionStarted = false;
+        // cleanup UI & listeners
+        userElements.forEach(({ el }, uid) => { if (el && el.parentNode) el.parentNode.removeChild(el); });
+        userElements.clear();
+        userUnsubLatest.forEach(unsub => { if (typeof unsub === 'function') unsub(); });
+        userUnsubLatest.clear();
+        if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
+        chatBox.classList.add('hidden');
+      } catch (e) {
+        console.error('signout error', e);
+      }
+    });
+
     closeChatBtn.addEventListener('click', closeChat);
-
-    // back button (go back to index)
-    document.getElementById('back-btn').addEventListener('click', () => {
-      window.location.href = 'index.html';
-    });
-
-    // initialize lucide icons
+    document.getElementById('back-btn').addEventListener('click', () => { window.location.href = 'index.html'; });
     lucide.createIcons();
   </script>
 </body>
 </html>
+
 </div>
 
             <!-- Refer Page -->
